@@ -20,9 +20,12 @@ def run_agent(llm, user_input: str) -> str:
         tool_call = message["tool_calls"][0]
         tool_name = tool_call["function"]["name"]
         arguments_text = tool_call["function"]["arguments"]
-        arguments = json.loads(arguments_text)
-
-        observation = execute_tool(tool_name, arguments)
+        try:
+            arguments = json.loads(arguments_text)
+        except json.JSONDecodeError as error:
+                observation = f"Tool error: invalid JSON arguments: {error}"
+        else:
+                observation = execute_tool(tool_name, arguments)
 
         messages.append({
             "role": "tool",
@@ -33,4 +36,4 @@ def run_agent(llm, user_input: str) -> str:
     if "tool_calls" not in message:
         return message["content"]
 
-    return "Agent stopped because it reached MAX_STEPS."
+    return f"Agent stopped because it reached the maximum step limit: {MAX_STEPS}"

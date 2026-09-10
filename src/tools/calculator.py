@@ -17,5 +17,6 @@ CALCULATOR_SCHEMA = {
 }
 
 def calculator(expression: str) -> str:
+    # TODO: eval 不安全，以后应该用安全的表达式解析器来替代。
     result = eval(expression)
     return str(result)

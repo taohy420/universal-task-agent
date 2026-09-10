@@ -22,5 +22,12 @@ def get_tool_schemas() -> list[dict]:
 
 
 def execute_tool(tool_name: str, arguments: dict) -> str:
+    if tool_name not in TOOL_FUNCTIONS:
+        return f"Tool error: unknown tool '{tool_name}'"
+
     tool_function = TOOL_FUNCTIONS[tool_name]
-    return tool_function(**arguments)
+
+    try:
+        return tool_function(**arguments)
+    except Exception as error:
+        return f"Tool error: {error}"
