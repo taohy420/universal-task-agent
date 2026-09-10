@@ -1,5 +1,5 @@
 from llms.deepseek_client import DeepSeekClient
-from tools.calculator import CALCULATOR_SCHEMA
+from tools.calculator import CALCULATOR_SCHEMA, calculator
 import json
 
 
@@ -23,6 +23,17 @@ def main():
     expression = arguments["expression"]
 
     print("Expression:", expression)
+    observation = calculator(expression)
+    print("Observation:", observation)
+    messages.append(message)
+    messages.append({
+    "role": "tool",
+    "tool_call_id": tool_call["id"],
+    "content": observation,
+    })
+    print(messages)
+    final_message = llm.chat(messages)
+    print("Final Answer:", final_message["content"])
 
 
 if __name__ == "__main__":

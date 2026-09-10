@@ -15,3 +15,7 @@ CALCULATOR_SCHEMA = {
         },
     },
 }
+
+def calculator(expression: str) -> str:
+    result = eval(expression)
+    return str(result)
