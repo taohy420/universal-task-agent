@@ -1,5 +1,5 @@
 from llms.deepseek_client import DeepSeekClient
-from tools.calculator import CALCULATOR_SCHEMA, calculator
+from tools.registry import get_tool_schemas, execute_tool
 import json
 
 
@@ -8,11 +8,10 @@ def main():
 
     messages = [
         {"role": "system", "content": "你是一个会根据需要调用工具的 AI Agent。"},
-        {"role": "user", "content": "请计算 23 * 17。"},
+        {"role": "user", "content": "请计算 100 / 4 + 6。"},
     ]
 
-    message = llm.chat(messages, tools=[CALCULATOR_SCHEMA])
-    print(message)
+    message = llm.chat(messages, tools=get_tool_schemas())
     tool_call = message["tool_calls"][0]
     tool_name = tool_call["function"]["name"]
     arguments_text = tool_call["function"]["arguments"]
@@ -20,10 +19,8 @@ def main():
     print("Tool Name:", tool_name)
     print("Arguments Text:", arguments_text)
     arguments = json.loads(arguments_text)
-    expression = arguments["expression"]
 
-    print("Expression:", expression)
-    observation = calculator(expression)
+    observation = execute_tool(tool_name, arguments)
     print("Observation:", observation)
     messages.append(message)
     messages.append({
@@ -31,7 +28,6 @@ def main():
     "tool_call_id": tool_call["id"],
     "content": observation,
     })
-    print(messages)
     final_message = llm.chat(messages)
     print("Final Answer:", final_message["content"])
 
