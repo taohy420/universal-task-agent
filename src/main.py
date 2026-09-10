@@ -14,7 +14,7 @@ def create_llm():
 def main():
 
     llm = create_llm()
-    user_input = "请查询 Shanghai 的天气，如果下雨，就把今天带伞保存成笔记。"
+    user_input = "请调用 echo_text 工具，把 hello from agent 发送过去。"
 
     result = run_agent(llm, user_input)
     print(result)
