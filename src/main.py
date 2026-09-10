@@ -1,28 +1,28 @@
-from config import LLM_PROVIDER
 from llms.deepseek_client import DeepSeekClient
-from llms.ollama_client import OllamaClient
-
-
-def create_llm():
-    if LLM_PROVIDER == "deepseek":
-        return DeepSeekClient()
-
-    if LLM_PROVIDER == "ollama":
-        return OllamaClient()
-
-    raise ValueError(f"Unsupported LLM_PROVIDER: {LLM_PROVIDER}")
+from tools.calculator import CALCULATOR_SCHEMA
+import json
 
 
 def main():
-    llm = create_llm()
+    llm = DeepSeekClient()
 
     messages = [
-        {"role": "system", "content": "你是一个简洁的 AI Agent 项目助手。"},
-        {"role": "user", "content": "用一句话解释什么是 Agent。"},
+        {"role": "system", "content": "你是一个会根据需要调用工具的 AI Agent。"},
+        {"role": "user", "content": "请计算 23 * 17。"},
     ]
 
-    answer = llm.chat(messages)
-    print(answer)
+    message = llm.chat(messages, tools=[CALCULATOR_SCHEMA])
+    print(message)
+    tool_call = message["tool_calls"][0]
+    tool_name = tool_call["function"]["name"]
+    arguments_text = tool_call["function"]["arguments"]
+
+    print("Tool Name:", tool_name)
+    print("Arguments Text:", arguments_text)
+    arguments = json.loads(arguments_text)
+    expression = arguments["expression"]
+
+    print("Expression:", expression)
 
 
 if __name__ == "__main__":
