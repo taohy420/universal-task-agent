@@ -1,45 +1,87 @@
-# 通用任务执行 Agent
+# 轻量级 Agent 学习项目
 
-这是一个从零实现的轻量级 AI Agent 项目，支持 DeepSeek API、Ollama 本地模型、Function Calling、本地 Python 工具和 MCP 工具接入。
+这是一个用于理解 Agent 核心流程的小项目。项目重点是看清楚：
 
-本项目重点不是堆复杂框架，而是证明我理解 Agent 的核心原理：LLM 负责决策，工具负责执行，Agent Loop 负责把工具结果重新放回上下文，让模型继续推理。
+- 用户输入如何进入程序
+- LLM 如何接收 messages 和 tools
+- LLM 如何返回 tool_calls
+- Python 程序如何真正执行工具
+- Tool Result 如何写回 messages
+- Agent Loop 如何继续运行直到得到最终回答
 
-## 功能特性
+## 当前功能
 
-- 支持 DeepSeek API 云端模型
-- 支持 Ollama 本地模型
-- 统一 LLM 调用接口
-- 支持 Function Calling / Tool Calling
-- 自己实现 Agent Loop
-- 支持多步骤工具调用
-- 本地 Python 工具：
+- 循环交互式输入
+- 运行期间的多轮聊天记忆
+- DeepSeek API 调用
+- Agent Loop
+- 本地 Python Tool
   - calculator
+- MCP Tools
   - get_weather
-  - save_note
-- 支持 MCP Server / Client
-- 统一本地工具和 MCP 工具调用
-- 支持 Agent Trace 执行轨迹
-- 支持 MAX_STEPS 最大步数保护
-- 支持基础工具异常处理
+  - get_hot_news
+- Tool Schema
+- Tool Calling / Function Calling
+- Tool Result 回传给 LLM
+- Agent Trace 执行轨迹
+- MAX_STEPS 最大步数保护
 
-## Demo Cases
-Case 1：计算 + 保存笔记
-请计算 12 * 8 + 5，并把结果保存成笔记。
+## 运行方式
 
-Case 2：天气查询 + 条件判断 + 保存笔记
-请查询 Shanghai 的天气，如果下雨，就把今天带伞保存成笔记。
+安装依赖：
 
-Case 3：MCP 工具 + 本地工具混合调用
-请调用 echo_text 工具发送 hello mcp agent，然后把返回结果保存成笔记。
 ```powershell
-python src\main.py 1
-python src\main.py 2
-python src\main.py 3
+pip install -r requirements.txt
+```
 
-核心流程
-User -> LLM -> Tool Call -> Tool Execution -> Observation -> LLM -> Final Answer
+复制配置文件：
 
-项目结构
+```powershell
+copy .env.example .env
+```
+
+然后编辑 `.env`，填入自己的 DeepSeek API Key。
+
+启动：
+
+```powershell
+python src\main.py
+```
+
+退出：
+
+```text
+exit
+```
+
+当前记忆范围：
+
+```text
+程序运行期间：会记住前面聊过的内容
+程序退出以后：不会保存长期记忆
+```
+
+## 可以尝试的问题
+
+```text
+请计算 12 * 8 + 5
+```
+
+```text
+请查询上海现在的天气
+```
+
+```text
+帮我做一个上海周末两日游攻略，可以结合当前天气
+```
+
+```text
+帮我获取今天三条热点新闻
+```
+
+## 项目结构
+
+```text
 src/
   main.py
   config.py
@@ -55,8 +97,6 @@ src/
 
   tools/
     calculator.py
-    weather.py
-    save_note.py
     registry.py
 
   mcp_servers/
@@ -64,25 +104,62 @@ src/
 
   mcp_client/
     client.py
+```
 
-快速开始
+## 核心流程
 
-安装依赖：
-pip install -r requirements.txt
-复制配置文件：
-copy .env.example .env
-然后编辑 .env，填入自己的 DeepSeek API Key。
-项目边界
+```text
+用户输入
+↓
+main.py
+↓
+run_agent()
+↓
+messages + tool schemas
+↓
+LLM
+↓
+tool_calls?
+├─ 没有：最终回答
+└─ 有：
+   ↓
+   registry.py
+   ↓
+   本地 calculator 或 MCP tool
+   ↓
+   Tool Result
+   ↓
+   写回 messages
+   ↓
+   再次调用 LLM
+```
+
+## 工具分工
+
+本地 Python Tool：
+
+```text
+calculator
+```
+
+MCP Tool：
+
+```text
+get_weather
+get_hot_news
+```
+
+`registry.py` 负责根据 LLM 返回的工具名，把调用分发到本地 Python 函数或 MCP Client。
+
+## 项目边界
+
 本项目暂时不使用：
+
 - LangChain
 - LangGraph
 - FastAPI
 - 数据库
 - 复杂前端
 - RAG
-项目重点是理解和实现 Agent 的核心机制，而不是依赖高级框架封装。
-Known Limitations
-- calculator 当前使用 eval，真实项目中应替换为更安全的表达式解析方案。
-- weather 当前是假数据，用于演示工具调用流程。
-- MCP 工具 schema 当前为手动合并，后续可以改为动态发现。
-- Ollama 小模型在复杂多步骤工具调用中可能不如云端大模型稳定。
+
+项目重点是理解 Agent 的核心机制，而不是依赖高级框架封装。

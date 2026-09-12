@@ -8,21 +8,38 @@ MCP_TOOL_SCHEMAS = [
     {
         "type": "function",
         "function": {
-            "name": "echo_text",
-            "description": "Echo the input text through the MCP simple server.",
+            "name": "get_weather",
+            "description": "Get the real current weather for a given city through the MCP server.",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "text": {
+                    "city": {
                         "type": "string",
-                        "description": "The text to echo.",
+                        "description": "The city name, for example: Shanghai or Beijing.",
                     }
                 },
-                "required": ["text"],
+                "required": ["city"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_hot_news",
+            "description": "Get the top 3 current hot news headlines through the MCP server.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": [],
             },
         },
     }
 ]
+
+MCP_TOOL_NAMES = {
+    item["function"]["name"]
+    for item in MCP_TOOL_SCHEMAS
+}
 
 async def call_mcp_tool(tool_name: str, arguments: dict):
     server_params = StdioServerParameters(
@@ -60,12 +77,12 @@ async def main():
                 print("-", tool.name, "|", tool.description)
 
             result = await session.call_tool(
-                "echo_text",
-                {"text": "hello mcp"},
+                "get_hot_news",
+                {},
             )
             print("Tool Result:", result.content)
 
 
 if __name__ == "__main__":
-    result = call_mcp_tool_sync("echo_text", {"text": "hello sync mcp"})
+    result = call_mcp_tool_sync("get_hot_news", {})
     print(result)

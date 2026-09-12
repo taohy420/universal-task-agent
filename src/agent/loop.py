@@ -5,12 +5,8 @@ from tools.registry import get_tool_schemas, execute_tool
 from agent.trace import format_trace
 
 
-def run_agent(llm, user_input: str) -> str:
-    messages = [
-        {"role": "system", "content": "你是一个会根据需要调用工具的 AI Agent。"},
-        {"role": "user", "content": user_input},
-    ]
-
+def run_agent(llm, messages: list[dict], user_input: str) -> str:
+    messages.append({"role": "user", "content": user_input})
     trace_steps = []
 
     for step in range(MAX_STEPS):
@@ -18,6 +14,7 @@ def run_agent(llm, user_input: str) -> str:
 
         if "tool_calls" not in message:
             final_answer = message["content"]
+            messages.append(message)
             return format_trace(trace_steps, final_answer)
 
         messages.append(message)
@@ -46,7 +43,7 @@ def run_agent(llm, user_input: str) -> str:
             "content": observation,
         })
 
-    return format_trace(
-        trace_steps,
-        f"Agent stopped because it reached the maximum step limit: {MAX_STEPS}",
-    )
+    final_answer = f"Agent stopped because it reached the maximum step limit: {MAX_STEPS}"
+    messages.append({"role": "assistant", "content": final_answer})
+
+    return format_trace(trace_steps, final_answer)
